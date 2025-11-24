@@ -29,7 +29,7 @@ MonteWalk is an **MCP server** that gives AI assistants (like Claude) access to 
 
 ### 2. Installation
 ```bash
-git clone https://github.com/yourusername/MonteWalk.git
+git clone https://github.com/N-lia/MonteWalk.git
 cd MonteWalk
 python3 -m venv .venv
 source .venv/bin/activate
