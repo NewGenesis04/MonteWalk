@@ -19,10 +19,10 @@ env/
 *.swo
 *~
 
-# Environment variables
+# Environment variables (SECRETS - NEVER COMMIT)
 .env
 
-# Data files (portfolio state, logs)
+# Data files (portfolio state, logs - user-specific)
 data/portfolio.json
 data/activity.log
 data/watchlist.json
@@ -40,13 +40,9 @@ test_watchlist.py
 demo.py
 verify_mcp.py
 
-# Temporary/unnecessary documentation
+#Temporary/unnecessary documentation (internal use only)
 acritic.md
 MCP TOOLS.pdf
-NEWSAPI_SETUP.md
-ALPACA_SETUP.md
-API_REFERENCE.md
-AUDIT_REPORT.md
 ARCHITECTURE.md
 HACKATHON_SUBMISSION.md
 IMPLEMENTATION_SUMMARY.md
