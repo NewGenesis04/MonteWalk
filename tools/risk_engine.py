@@ -153,10 +153,15 @@ def validate_trade(symbol: str, side: Literal["buy", "sell"], qty: float, curren
     
     if side == "buy":
         if trade_value > (cash * 0.50): # Cap trade at 50% of available cash
-            return f"Risk Rejection: Trade value {trade_value:.2f} exceeds 50% of available cash {cash:.2f}."
+            msg = f"Risk Rejection: Trade value {trade_value:.2f} exceeds 50% of available cash {cash:.2f}."
+            logger.warning(msg)
+            return msg
 
     # 2. Max Quantity Check
     if qty <= 0:
-        return "Risk Rejection: Quantity must be positive."
+        msg = "Risk Rejection: Quantity must be positive."
+        logger.warning(msg)
+        return msg
         
+    logger.info(f"Trade validated: {side.upper()} {qty} {symbol} (${trade_value:.2f})")
     return None

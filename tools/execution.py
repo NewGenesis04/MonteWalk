@@ -94,11 +94,14 @@ def place_order(
         # Pre-Trade Risk Check
         risk_error = validate_trade(symbol, side, qty, current_price)
         if risk_error:
+            logger.warning(f"Trade rejected by risk engine: {risk_error}")
             return risk_error
         
         # Submit order to Alpaca
         if order_type == "market":
+            logger.info(f"Submitting MARKET order: {side.upper()} {qty} {symbol}")
             order_result = broker.submit_market_order(symbol, side, qty)
+            logger.info(f"Order submitted successfully: ID={order_result['order_id']}")
             return (
                 f"✅ Market Order Submitted: {side.upper()} {qty} {symbol}\n"
                 f"Order ID: {order_result['order_id']}\n"
@@ -116,7 +119,9 @@ def place_order(
             if side == "sell" and limit_price < current_price:
                 logger.warning(f"Sell limit {limit_price} is below market {current_price}")
             
+            logger.info(f"Submitting LIMIT order: {side.upper()} {qty} {symbol} @ ${limit_price}")
             order_result = broker.submit_limit_order(symbol, side, qty, limit_price)
+            logger.info(f"Order submitted successfully: ID={order_result['order_id']}")
             return (
                 f"✅ Limit Order Submitted: {side.upper()} {qty} {symbol} @ ${limit_price:.2f}\n"
                 f"Order ID: {order_result['order_id']}\n"
@@ -124,10 +129,11 @@ def place_order(
                 f"Submitted at: {order_result['submitted_at']}"
             )
         else:
+            logger.error(f"Unknown order type requested: {order_type}")
             return f"ERROR: Unknown order type: {order_type}"
             
     except Exception as e:
-        logger.error(f"Order failed: {e}")
+        logger.error(f"Order failed: {e}", exc_info=True)
         return f"ERROR: Order failed - {str(e)}"
 
 
@@ -145,10 +151,12 @@ def cancel_order(order_id: str) -> str:
         return "ERROR: Alpaca broker not initialized."
     
     try:
+        logger.info(f"Cancelling order: {order_id}")
         broker.cancel_order(order_id)
+        logger.info(f"Order {order_id} cancelled successfully")
         return f"✅ Order {order_id} cancelled successfully"
     except Exception as e:
-        logger.error(f"Cancel order failed: {e}")
+        logger.error(f"Cancel order failed: {e}", exc_info=True)
         return f"ERROR: Failed to cancel order - {str(e)}"
 
 

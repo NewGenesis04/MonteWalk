@@ -38,22 +38,40 @@ def get_price(
         List of dictionaries containing OHLCV data.
     """
     ticker = yf.Ticker(symbol)
-    # auto_adjust=True is important for total returns analysis
-    df = ticker.history(period=period, interval=interval, auto_adjust=True)
+    """
+    Retrieves historical price data for a given symbol.
     
-    if df.empty:
-        raise ValueError(f"No data found for {symbol}. Check symbol or API status.")
+    Args:
+        symbol: Ticker symbol.
+        period: Data period (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max).
+        interval: Data interval (1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo).
     
-    # Data Quality Check
-    if df.isnull().values.any():
-        # Fill small gaps, drop large ones
-        df = df.fillna(method='ffill').fillna(method='bfill')
-    
-    # Reset index to make Date a column
-    df.reset_index(inplace=True)
-    # Convert Timestamp to string for JSON serialization
-    df['Date'] = df['Date'].astype(str)
-    return df.to_dict(orient="records")
+    Returns:
+        JSON string of dictionaries containing OHLCV data.
+    """
+    try:
+        ticker = yf.Ticker(symbol)
+        history = ticker.history(period=period, interval=interval)
+        
+        if history.empty:
+            logger.warning(f"No price data found for {symbol} (period={period}, interval={interval})")
+            return f"No data found for {symbol}"
+        
+        # Reset index to make Date a column
+        history.reset_index(inplace=True)
+        
+        # Convert to JSON-friendly format (list of dicts)
+        # Convert timestamps to string
+        history['Date'] = history['Date'].astype(str)
+        
+        data = history.to_dict(orient="records")
+        logger.info(f"Fetched {len(data)} price records for {symbol}")
+        
+        return json.dumps(data, indent=2)
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch price data for {symbol}: {e}", exc_info=True)
+        return f"Error fetching data for {symbol}: {str(e)}"
 
 def get_fundamentals(symbol: str) -> Dict[str, Any]:
     """

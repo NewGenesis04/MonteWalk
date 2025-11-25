@@ -12,22 +12,19 @@ from tools.risk_engine import portfolio_risk, var, max_drawdown, monte_carlo_sim
 from tools.backtesting import run_backtest, walk_forward_analysis
 from tools.feature_engineering import compute_indicators, rolling_stats, get_technical_summary
 from tools.portfolio_optimizer import mean_variance_optimize, risk_parity
-from tools.logger import log_action
+from tools.logger import setup_logging, log_action
 from tools.news_intelligence import get_news, analyze_sentiment, get_symbol_sentiment
 from tools.watchlist import add_to_watchlist, remove_from_watchlist, get_watchlist_data
 from tools.crypto_data import get_crypto_price, get_crypto_market_data, get_trending_crypto, search_crypto
 from tools.alpaca_broker import get_broker
 
-# Setup logging
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Initialize Logging
+setup_logging()
 logger = logging.getLogger(__name__)
 
 # Initialize MCP Server
 mcp = FastMCP("MonteWalk")
+logger.info("MonteWalk MCP Server initializing...")
 
 # Health check
 @mcp.tool()

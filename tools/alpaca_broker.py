@@ -10,12 +10,13 @@ from alpaca.trading.requests import (
     LimitOrderRequest,
     GetOrdersRequest
 )
-from alpaca.trading.enums import OrderSide, TimeInForce, QueryOrderStatus
+from alpaca.trading.enums import OrderSide, TimeInForce, QueryOrderStatus, OrderClass
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
 from config import ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_PAPER_TRADING
 import logging
+import os # Added os import
 
 logger = logging.getLogger(__name__)
 
@@ -29,16 +30,21 @@ class AlpacaBroker:
     def __init__(self):
         """Initialize Alpaca trading and data clients."""
         if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
-            raise ValueError(
-                "Alpaca credentials not found. "
-                "Set ALPACA_API_KEY and ALPACA_SECRET_KEY in your .env file."
-            )
+            logger.error("Alpaca API credentials missing in environment variables.")
+            raise ValueError("Alpaca API credentials not found in environment variables.")
         
-        self.trading_client = TradingClient(
-            ALPACA_API_KEY, 
-            ALPACA_SECRET_KEY, 
-            paper=ALPACA_PAPER_TRADING
-        )
+        try:
+            self.trading_client = TradingClient(
+                ALPACA_API_KEY, 
+                ALPACA_SECRET_KEY, 
+                paper=ALPACA_PAPER_TRADING
+            )
+            account = self.trading_client.get_account()
+            logger.info(f"Alpaca Broker initialized. Account Status: {account.status}, Buying Power: ${account.buying_power}")
+        except Exception as e:
+            logger.critical(f"Failed to connect to Alpaca API: {e}")
+            raise ConnectionError(f"Failed to connect to Alpaca: {e}")
+
         self.data_client = StockHistoricalDataClient(
             ALPACA_API_KEY, 
             ALPACA_SECRET_KEY

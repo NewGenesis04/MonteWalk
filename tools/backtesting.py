@@ -11,46 +11,65 @@ def run_backtest(symbol: str, fast_ma: int, slow_ma: int, start_date: str = "202
     """
     Backtests a Moving Average Crossover strategy.
     """
-    df = _fetch_data(symbol, start_date, end_date)
-    if df.empty:
-        return "No data found."
-    
-    # Calculate Indicators
-    # Handle MultiIndex columns if present (yfinance update)
-    close = df['Close']
-    if isinstance(close, pd.DataFrame):
-        close = close.iloc[:, 0]
+    try:
+        logger.info(f"Starting backtest for {symbol} (Fast: {fast_ma}, Slow: {slow_ma}) from {start_date} to {end_date}")
+        data = get_price(symbol, interval="1d", period="max")
+        df = pd.DataFrame(json.loads(data))
         
-    df['Fast'] = close.rolling(window=fast_ma).mean()
-    df['Slow'] = close.rolling(window=slow_ma).mean()
-    
-    # Signal
-    df['Signal'] = 0
-    df.loc[df['Fast'] > df['Slow'], 'Signal'] = 1
-    df['Position'] = df['Signal'].shift(1)
-    
-    # Returns
-    df['Returns'] = close.pct_change()
-    
-    # Transaction Costs (e.g., 10bps per trade)
-    COST_BPS = 0.001
-    trades = df['Signal'].diff().abs()
-    costs = trades * COST_BPS
-    
-    df['Strategy'] = (df['Returns'] * df['Position']) - costs
-    
-    cumulative = (1 + df['Strategy']).cumprod()
-    total_return = cumulative.iloc[-1] - 1
-    
-    std_dev = df['Strategy'].std()
-    if std_dev == 0:
-        sharpe = 0.0
-    else:
-        sharpe = df['Strategy'].mean() / std_dev * np.sqrt(252)
-    
-    return (f"Backtest Results ({symbol} {fast_ma}/{slow_ma}) [w/ Costs]:\n"
+        if df.empty:
+            logger.warning(f"Backtest failed: No data for {symbol}")
+            return f"No data found for {symbol}"
+            
+        # Filter by date
+        df['Date'] = pd.to_datetime(df['Date'], utc=True)
+        mask = (df['Date'] >= pd.to_datetime(start_date, utc=True)) & (df['Date'] <= pd.to_datetime(end_date, utc=True))
+        df = df.loc[mask].copy()
+        
+        if df.empty:
+            logger.warning(f"Backtest failed: No data in date range for {symbol}")
+            return "No data in specified date range."
+            
+        # Strategy Logic
+        df['Fast_MA'] = ta.sma(df['Close'], length=fast_ma)
+        df['Slow_MA'] = ta.sma(df['Close'], length=slow_ma)
+        
+        # Signals
+        df['Signal'] = 0
+        df.loc[df['Fast_MA'] > df['Slow_MA'], 'Signal'] = 1
+        df['Position'] = df['Signal'].diff()
+        
+        # Calculate Returns
+        df['Market_Return'] = df['Close'].pct_change()
+        df['Strategy_Return'] = df['Market_Return'] * df['Signal'].shift(1)
+        
+        # Metrics
+        total_return = (1 + df['Strategy_Return']).prod() - 1
+        buy_hold_return = (1 + df['Market_Return']).prod() - 1
+        
+        # Max Drawdown
+        cum_ret = (1 + df['Strategy_Return']).cumprod()
+        peak = cum_ret.expanding(min_periods=1).max()
+        dd = (cum_ret / peak) - 1
+        max_dd = dd.min()
+        
+        # Sharpe Ratio (assuming 0% risk free for simplicity or use config)
+        sharpe = df['Strategy_Return'].mean() / df['Strategy_Return'].std() * np.sqrt(252)
+        
+        result = (
+            f"Backtest Results for {symbol} ({start_date} to {end_date}):\n"
+            f"Strategy: MA Crossover ({fast_ma}/{slow_ma})\n"
+            f"------------------------------------------------\n"
             f"Total Return: {total_return:.2%}\n"
-            f"Sharpe Ratio: {sharpe:.2f}")
+            f"Buy & Hold Return: {buy_hold_return:.2%}\n"
+            f"Sharpe Ratio: {sharpe:.2f}\n"
+            f"Max Drawdown: {max_dd:.2%}"
+        )
+        logger.info(f"Backtest completed for {symbol}. Return: {total_return:.2%}")
+        return result
+
+    except Exception as e:
+        logger.error(f"Backtest failed for {symbol}: {e}", exc_info=True)
+        return f"Error running backtest: {str(e)}"
 
 def walk_forward_analysis(symbol: str, start_date: str = "2020-01-01", end_date: str = "2023-12-31", train_months: int = 12, test_months: int = 3) -> str:
     """

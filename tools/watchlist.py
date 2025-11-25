@@ -28,6 +28,7 @@ def add_to_watchlist(symbol: str) -> str:
     if symbol not in watchlist:
         watchlist.append(symbol)
         _save_watchlist(watchlist)
+        logger.info(f"Added {symbol} to watchlist")
         return f"Added {symbol} to watchlist."
     return f"{symbol} is already in the watchlist."
 
@@ -40,6 +41,7 @@ def remove_from_watchlist(symbol: str) -> str:
     if symbol in watchlist:
         watchlist.remove(symbol)
         _save_watchlist(watchlist)
+        logger.info(f"Removed {symbol} from watchlist")
         return f"Removed {symbol} from watchlist."
     return f"{symbol} was not in the watchlist."
 

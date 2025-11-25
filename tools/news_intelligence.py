@@ -34,16 +34,20 @@ def get_news(symbol: str, max_items: int = 10) -> str:
         if not news:
             # Try NewsAPI first if available
             if NEWSAPI_KEY:
+                logger.info(f"yfinance news empty for {symbol}, trying NewsAPI")
                 newsapi_results = get_newsapi_articles(symbol, max_items)
                 if newsapi_results:
                     import json
                     return json.dumps(newsapi_results, indent=2)
             
             # Fallback to Google News
+            logger.info(f"Trying GNews fallback for {symbol}")
             gnews_results = get_google_news(symbol, max_items)
             if gnews_results:
                 import json
                 return json.dumps(gnews_results, indent=2)
+            
+            logger.warning(f"No news found for {symbol} from any source")
             return f"No news found for {symbol}"
         
         # Limit results
@@ -58,10 +62,12 @@ def get_news(symbol: str, max_items: int = 10) -> str:
                 "link": item.get("link", ""),
             })
         
+        logger.info(f"Fetched {len(results)} news items for {symbol} from yfinance")
         import json
         return json.dumps(results, indent=2)
         
     except Exception as e:
+        logger.error(f"Error fetching news for {symbol}: {e}", exc_info=True)
         return f"Error fetching news for {symbol}: {str(e)}"
 
 

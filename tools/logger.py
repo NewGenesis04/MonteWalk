@@ -1,13 +1,42 @@
 import logging
+import sys
+from pathlib import Path
 from config import LOG_FILE
 
-# Ensure logger is configured
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger("QuantAgentAudit")
+# Create a custom logger
+logger = logging.getLogger("MonteWalk")
+
+def setup_logging():
+    """
+    Configures the logging system for the entire application.
+    Should be called once at application startup.
+    """
+    # Create formatter
+    formatter = logging.Formatter(
+        '%(asctime)s | %(levelname)s | %(name)s | %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    # File Handler
+    file_handler = logging.FileHandler(LOG_FILE)
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
+
+    # Stream Handler (Console)
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    stream_handler.setLevel(logging.INFO)
+
+    # Configure Root Logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    
+    # Avoid adding duplicate handlers
+    if not root_logger.handlers:
+        root_logger.addHandler(file_handler)
+        root_logger.addHandler(stream_handler)
+    
+    logger.info("Logging system initialized.")
 
 def log_action(action_type: str, details: str) -> str:
     """
@@ -17,5 +46,7 @@ def log_action(action_type: str, details: str) -> str:
         action_type: Category (e.g., 'REASONING', 'TRADE_DECISION', 'ERROR').
         details: Description of the action.
     """
-    logger.info(f"[{action_type.upper()}] {details}")
+    # Clean up details to remove excessive newlines or emojis if needed
+    clean_details = details.strip()
+    logger.info(f"[{action_type.upper()}] {clean_details}")
     return "Action logged successfully."
