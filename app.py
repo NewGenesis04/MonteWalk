@@ -336,6 +336,7 @@ tools_map = {
     "Watchlist": [add_to_watchlist, remove_from_watchlist, get_watchlist_resource, sync_watchlist],
     "Crypto": [get_crypto_price, get_crypto_market_data, get_trending_crypto, search_crypto, get_crypto_resource, crypto_market_update],
     "Prompts": [morning_briefing, analyze_ticker, risk_analysis, backtest_strategy, portfolio_rebalance],
+    "Resources": [get_algo_cheat_sheet, get_classic_papers, get_risk_checklist],
     "Utils": [log_action]
 }
 
@@ -378,6 +379,6 @@ with gr.Blocks(title="MonteWalk MCP Server") as demo:
 
 if __name__ == "__main__":
     logger.info("Starting MonteWalk Gradio MCP Server...")
-    logger.info("Gradio UI: http://localhost:7860")
-    logger.info("MCP enabled: Tools available to Claude Desktop")
-    demo.launch(footer_links=["gradio", "settings", "api"])
+    logger.info("Gradio UI: http://localhost:7850")
+    logger.info("MCP enabled: Tools available to MCP clients")
+    demo.launch(mcp_server=True, footer_links=["gradio", "settings", "api"])
