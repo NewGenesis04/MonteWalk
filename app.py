@@ -378,4 +378,6 @@ with gr.Blocks(title="MonteWalk MCP Server") as demo:
 
 if __name__ == "__main__":
     logger.info("Starting MonteWalk Gradio MCP Server...")
-    demo.launch(server_name="0.0.0.0", server_port=7860, mcp_server=True)
+    logger.info("Gradio UI: http://localhost:7860")
+    logger.info("MCP enabled: Tools available to Claude Desktop")
+    demo.launch(footer_links=["gradio", "settings", "api"])

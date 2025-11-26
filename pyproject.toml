@@ -16,6 +16,6 @@ dependencies = [
     "newsapi-python",
     "pycoingecko",
     "alpaca-py",
-    "gradio>=5.9.0",
-    "python-dotenv"
+    "gradio[mcp,oauth]==6.0.0.dev4",
+    "python-dotenv",
 ]
